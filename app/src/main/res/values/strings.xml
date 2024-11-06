@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">NFCTagEmulation</string>
+    <string name="service_description">NFC Emulation Service</string>
+    <string name="aid_group_description">AID Group for NFC Emulation</string>
+    <string name="aid_group">Primary AID Group</string>
+    <string name="aid_group_null">Null AID Group</string>
+</resources>
