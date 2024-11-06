@@ -21,7 +21,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nfc_emulation_card)
 
-        logTextView = findViewById(R.id.logTextView)
 
         // Настраиваем BroadcastReceiver для сообщений
         broadcastReceiver = object : BroadcastReceiver() {
