@@ -50,8 +50,6 @@ class MyHostApduService : HostApduService() {
         val rawCommandData = commandApdu.joinToString(" ") { String.format("%02X", it) }
         logAndBroadcast("Получена команда APDU: $rawCommandData")
 
-        // Сохраняем данные в файл для анализа
-        saveRawDataToFile(commandApdu)
 
         if (isLikelyAPDU(commandApdu)) {
             val cla = commandApdu[0]
@@ -269,14 +267,14 @@ class MyHostApduService : HostApduService() {
             0x04.toByte(),               // T (Tag) - NDEF File Control TLV
             0x06.toByte(),               // L (Length)
             0xE1.toByte(), 0x04.toByte(), // NDEF File ID
-            0x00.toByte(), 0xFF.toByte(), // NDEF File Size (максимальный размер файла)
+            0x00.toByte(), 0x00.toByte(), // NDEF File Size (максимальный размер файла)
             0x00.toByte(), 0x00.toByte()  // Read & Write Access
         )
     }
 
     private fun createNdefFile(): ByteArray {
         // Изначально создаём пустой NDEF файл размером 1024 байта
-        val ndefFileSize = 1024
+        val ndefFileSize = 4096
         val ndefFile = ByteArray(ndefFileSize)
         // Устанавливаем длину NDEF сообщения в 0
         ndefFile[0] = 0x00
