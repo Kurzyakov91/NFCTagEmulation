@@ -1,6 +1,8 @@
 package com.kurzyakov.nfctagemulation
 
 import android.content.Intent
+import android.nfc.NdefMessage
+import android.nfc.NdefRecord
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
@@ -40,6 +42,11 @@ class MyHostApduService : HostApduService() {
     private var ndefFile = createNdefFile()
     private val ndefFileLock = ReentrantLock() // Для обеспечения потокобезопасности при записи
 
+    // Дополнительные переменные для отслеживания состояния
+    private var maxOffsetWritten = 0
+    private var totalNdefMessageLength = -1
+    private var ndefMessageProcessed = false
+
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray? {
         if (commandApdu == null) {
             logAndBroadcast("Получена пустая команда APDU.")
@@ -50,8 +57,6 @@ class MyHostApduService : HostApduService() {
         val rawCommandData = commandApdu.joinToString(" ") { String.format("%02X", it) }
         logAndBroadcast("Получена команда APDU: $rawCommandData")
 
-        // Сохраняем данные в файл для анализа
-        saveRawDataToFile(commandApdu)
 
         if (isLikelyAPDU(commandApdu)) {
             val cla = commandApdu[0]
@@ -106,6 +111,10 @@ class MyHostApduService : HostApduService() {
     override fun onDeactivated(reason: Int) {
         logAndBroadcast("NFC отключён, причина: $reason")
         selectedFileId = null // Сбрасываем выбранный файл при деактивации
+        // Сбрасываем состояния
+        ndefMessageProcessed = false
+        totalNdefMessageLength = -1
+        maxOffsetWritten = 0
     }
 
     private fun handleSelectByAid(commandApdu: ByteArray): ByteArray {
@@ -135,6 +144,10 @@ class MyHostApduService : HostApduService() {
         return if (isAidExpected) {
             logAndBroadcast("AID соответствует одному из ожидаемых. Отправляем успешный ответ.")
             selectedFileId = null // Сбрасываем выбранный файл
+            // Сбрасываем состояния
+            ndefMessageProcessed = false
+            totalNdefMessageLength = -1
+            maxOffsetWritten = 0
             SUCCESS_RESPONSE
         } else {
             logAndBroadcast("AID не соответствует ожидаемым. Отправляем ответ об ошибке.")
@@ -165,6 +178,12 @@ class MyHostApduService : HostApduService() {
         return if (fileId.contentEquals(CC_FILE_ID) || fileId.contentEquals(NDEF_FILE_ID)) {
             selectedFileId = fileId
             logAndBroadcast("File ID соответствует ожидаемому. Отправляем успешный ответ.")
+            // Сбрасываем состояния при выборе NDEF файла
+            if (fileId.contentEquals(NDEF_FILE_ID)) {
+                ndefMessageProcessed = false
+                totalNdefMessageLength = -1
+                maxOffsetWritten = 0
+            }
             SUCCESS_RESPONSE
         } else {
             logAndBroadcast("Неизвестный File ID. Отправляем ответ об ошибке.")
@@ -228,14 +247,64 @@ class MyHostApduService : HostApduService() {
             // Пишем данные в ndefFile
             System.arraycopy(data, 0, ndefFile, offset, data.size)
             logAndBroadcast("Записано ${data.size} байт в NDEF файл по смещению $offset")
+
+            // Обновляем максимальный записанный смещение
+            val newMaxOffset = maxOf(maxOffsetWritten, offset + data.size)
+            maxOffsetWritten = newMaxOffset
+
+            // Проверяем, получили ли мы хотя бы первые 2 байта для чтения длины NDEF сообщения
+            if (maxOffsetWritten >= 2 && !ndefMessageProcessed) {
+                // Всегда читаем длину из первых двух байт
+                totalNdefMessageLength = ((ndefFile[0].toInt() and 0xFF) shl 8) or (ndefFile[1].toInt() and 0xFF)
+                logAndBroadcast("Длина NDEF сообщения: $totalNdefMessageLength")
+
+                val totalDataLength = 2 + totalNdefMessageLength
+
+                if (maxOffsetWritten >= totalDataLength) {
+                    // Получили все данные, можем извлечь NDEF сообщение
+                    val ndefMessageBytes = ndefFile.copyOfRange(2, 2 + totalNdefMessageLength)
+                    try {
+                        val ndefMessage = NdefMessage(ndefMessageBytes)
+                        val records = ndefMessage.records
+                        for (record in records) {
+                            // Обрабатываем каждый NDEF Record
+                            if (record.tnf == NdefRecord.TNF_WELL_KNOWN && record.type.contentEquals(NdefRecord.RTD_TEXT)) {
+                                val text = parseTextRecord(record.payload)
+                                logAndBroadcast("Получен текст: $text")
+                            } else {
+                                logAndBroadcast("Получен NDEF Record с неизвестным типом")
+                            }
+                        }
+                        ndefMessageProcessed = true
+                    } catch (e: Exception) {
+                        logAndBroadcast("Ошибка при разборе NDEF сообщения: ${e.localizedMessage}")
+                    }
+                } else {
+                    logAndBroadcast("Ожидаем больше данных. Текущий размер: $maxOffsetWritten, необходимый: $totalDataLength")
+                }
+            }
         }
 
         return SUCCESS_RESPONSE
     }
 
+    private fun parseTextRecord(payload: ByteArray): String {
+        try {
+            val statusByte = payload[0].toInt()
+            val encoding = if ((statusByte and 0x80) == 0) "UTF-8" else "UTF-16"
+            val languageCodeLength = statusByte and 0x3F
+            val text = String(payload, 1 + languageCodeLength, payload.size - 1 - languageCodeLength, charset(encoding))
+            return text
+        } catch (e: Exception) {
+            logAndBroadcast("Ошибка при парсинге TextRecord: ${e.localizedMessage}")
+            return ""
+        }
+    }
+
     private fun logAndBroadcast(message: String) {
         Log.d(TAG, message)
         val intent = Intent("com.kurzyakov.ACTION_NFC_LOG")
+        intent.setPackage(applicationContext.packageName) // Указываем пакет приложения
         intent.putExtra("log", message)
         sendBroadcast(intent)
     }
@@ -269,14 +338,14 @@ class MyHostApduService : HostApduService() {
             0x04.toByte(),               // T (Tag) - NDEF File Control TLV
             0x06.toByte(),               // L (Length)
             0xE1.toByte(), 0x04.toByte(), // NDEF File ID
-            0x00.toByte(), 0xFF.toByte(), // NDEF File Size (максимальный размер файла)
+            0x0F.toByte(), 0xFF.toByte(), // NDEF File Size (максимальный размер файла) 4095 байт
             0x00.toByte(), 0x00.toByte()  // Read & Write Access
         )
     }
 
     private fun createNdefFile(): ByteArray {
-        // Изначально создаём пустой NDEF файл размером 1024 байта
-        val ndefFileSize = 1024
+        // Изначально создаём пустой NDEF файл размером 4096 байт
+        val ndefFileSize = 4096
         val ndefFile = ByteArray(ndefFileSize)
         // Устанавливаем длину NDEF сообщения в 0
         ndefFile[0] = 0x00

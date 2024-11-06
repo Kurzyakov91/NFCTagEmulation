@@ -24,7 +24,7 @@
                 android:resource="@xml/apduservice" />
         </service>
 
-        <!-- Главная активность -->
+        <!-- Главная активность (переименованная в MainActivity) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -33,20 +33,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- NFCEmulationCardActivity -->
-        <activity
-            android:name=".NFCEmulationCardActivity"
-            android:exported="false" />
-
-        <!-- BroadcastReceiver для глобальных сообщений -->
-        <receiver
-            android:name=".NfcLogReceiver"
-            android:exported="true"> <!-- Указано android:exported -->
-            <intent-filter>
-                <action android:name="com.kurzyakov.ACTION_NFC_LOG" />
-            </intent-filter>
-        </receiver>
 
     </application>
 
