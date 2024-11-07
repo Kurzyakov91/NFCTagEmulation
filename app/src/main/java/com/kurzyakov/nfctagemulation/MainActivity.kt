@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         logReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 val logMessage = intent?.getStringExtra("log") ?: "No log"
-                Log.d("MainActivity", "Received log: $logMessage")
+//                Log.d("MainActivity", "Received log: $logMessage")
 
                 // Обновляем UI в основном потоке
                 runOnUiThread {
