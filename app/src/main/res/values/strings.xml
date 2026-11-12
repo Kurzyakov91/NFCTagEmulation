@@ -1,7 +1,108 @@
 <resources>
-    <string name="app_name">NFCTagEmulation</string>
-    <string name="service_description">NFC Emulation Service</string>
-    <string name="aid_group_description">AID Group for NFC Emulation</string>
-    <string name="aid_group">Primary AID Group</string>
-    <string name="aid_group_null">Null AID Group</string>
+    <string name="app_name">NFC-метка</string>
+    <string name="service_description">Эмуляция NFC-метки (NDEF)</string>
+    <string name="aid_group_description">NFC Forum NDEF Tag Application</string>
+
+    <!-- Верхняя панель -->
+    <string name="title_main">Эмулятор NFC-метки</string>
+    <string name="action_more">Ещё</string>
+    <string name="action_self_test">Пробное чтение</string>
+    <string name="action_copy_log">Скопировать журнал</string>
+    <string name="action_clear_log">Очистить журнал</string>
+
+    <!-- Состояние NFC -->
+    <string name="status_ready_title">Метка готова</string>
+    <string name="status_ready_subtitle">Поднесите считыватель к задней панели телефона. Экран может быть заблокирован, но должен быть включён.</string>
+    <string name="status_reader_title">Считыватель на связи</string>
+    <string name="status_reader_subtitle">Идёт обмен командами, не убирайте телефон</string>
+    <string name="status_disabled_title">NFC выключен</string>
+    <string name="status_disabled_subtitle">Включите NFC, чтобы телефон работал как метка</string>
+    <string name="status_disabled_action">Открыть настройки NFC</string>
+    <string name="status_no_hce_title">Эмуляция не поддерживается</string>
+    <string name="status_no_hce_subtitle">На этом устройстве есть NFC, но нет Host Card Emulation</string>
+    <string name="status_no_nfc_title">Нет NFC</string>
+    <string name="status_no_nfc_subtitle">На этом устройстве нет модуля NFC. Журнал и пробное чтение всё равно работают.</string>
+
+    <!-- Содержимое метки -->
+    <string name="content_title">Содержимое метки</string>
+    <string name="content_empty_title">Метка пуста</string>
+    <string name="content_empty_subtitle">Считыватель может записать сюда сообщение, или задайте его сами</string>
+    <string name="content_invalid">Данные не являются корректным NDEF-сообщением</string>
+    <string name="content_usage">%1$d из %2$d байт</string>
+    <string name="content_origin_reader">записано считывателем</string>
+    <string name="content_origin_app">задано в приложении</string>
+    <string name="content_updated">Обновлено %1$s</string>
+    <string name="content_updated_with_origin">Обновлено %1$s · %2$s</string>
+    <string name="content_edit">Изменить</string>
+    <string name="content_set">Задать</string>
+    <string name="content_clear">Очистить</string>
+    <string name="content_open_link">Открыть ссылку</string>
+
+    <string name="record_text">Текст · %1$s</string>
+    <string name="record_uri">Ссылка</string>
+    <string name="record_mime">MIME · %1$s</string>
+    <string name="record_external">Внешний тип · %1$s</string>
+    <string name="record_empty">Пустая запись</string>
+    <string name="record_other">Запись TNF %1$d · %2$s</string>
+    <string name="record_binary">%1$d байт данных</string>
+
+    <!-- Редактор -->
+    <string name="editor_title">Данные метки</string>
+    <string name="editor_kind_text">Текст</string>
+    <string name="editor_kind_link">Ссылка</string>
+    <string name="editor_text_label">Текст</string>
+    <string name="editor_link_label">Адрес</string>
+    <string name="editor_link_hint">Например, https://example.com</string>
+    <string name="editor_size">%1$d из %2$d байт</string>
+    <string name="editor_too_large">Не помещается в метку: %1$d из %2$d байт</string>
+    <string name="editor_save">Сохранить</string>
+
+    <!-- Журнал -->
+    <string name="log_title">Журнал обмена</string>
+    <string name="log_empty_title">Пока пусто</string>
+    <string name="log_empty_subtitle">Когда считыватель обратится к метке, здесь появятся его команды и ответы</string>
+    <string name="session_reader">Считыватель</string>
+    <string name="session_simulated">Пробное чтение</string>
+    <string name="session_in_progress">идёт обмен…</string>
+    <string name="session_written">запись</string>
+    <string name="session_duration">%1$.1f с</string>
+    <string name="end_link_loss">Считыватель покинул поле</string>
+    <string name="end_deselected">Считыватель выбрал другое приложение</string>
+    <string name="end_finished">Чтение завершено</string>
+    <!-- Формы для 1, 2–4 и 5+ команд: склонение считается в коде, а не по языку системы -->
+    <string name="session_commands_one">%d команда</string>
+    <string name="session_commands_few">%d команды</string>
+    <string name="session_commands_many">%d команд</string>
+
+    <string name="op_select_ndef">Выбор NDEF-приложения (v%1$d.0)</string>
+    <string name="op_select_app">Выбор приложения %1$s</string>
+    <string name="op_select_cc">Выбор файла CC</string>
+    <string name="op_select_ndef_file">Выбор файла NDEF</string>
+    <string name="op_select_file">Выбор файла %1$s</string>
+    <string name="op_read">Чтение %1$s: %2$d Б со смещения %3$d</string>
+    <string name="op_update">Запись %1$s: %2$d Б по смещению %3$d</string>
+    <string name="op_unsupported">Неподдерживаемая команда %1$s</string>
+    <string name="op_malformed">Некорректная команда</string>
+    <string name="file_cc">CC</string>
+    <string name="file_ndef">NDEF</string>
+    <string name="file_none">файла</string>
+
+    <string name="sw_ok">OK</string>
+    <string name="sw_wrong_length">Неверная длина</string>
+    <string name="sw_security">Запись запрещена</string>
+    <string name="sw_no_current_ef">Файл не выбран</string>
+    <string name="sw_function_not_supported">Не поддерживается</string>
+    <string name="sw_file_not_found">Не найдено</string>
+    <string name="sw_incorrect_p1p2">Неверные P1/P2</string>
+    <string name="sw_offset_outside">Смещение за пределами файла</string>
+    <string name="sw_ins_not_supported">Неизвестная команда</string>
+    <string name="sw_error">Ошибка</string>
+
+    <!-- Уведомления -->
+    <string name="snack_message_received">Считыватель записал новое сообщение</string>
+    <string name="snack_self_test_ok">Пробное чтение: прочитано %1$d Б, совпадает с содержимым</string>
+    <string name="snack_self_test_empty">Пробное чтение: метка пуста</string>
+    <string name="snack_self_test_failed">Пробное чтение не удалось, подробности в журнале</string>
+    <string name="snack_log_copied">Журнал скопирован</string>
+    <string name="log_export_header">Журнал обмена NFC-метки</string>
 </resources>

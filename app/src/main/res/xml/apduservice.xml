@@ -3,11 +3,12 @@
     android:description="@string/service_description"
     android:requireDeviceUnlock="false">
 
-    <!-- AID группы для NFC -->
-    <aid-group android:description="@string/aid_group" android:category="other">
+    <!-- NFC Forum NDEF Tag Application: Mapping 2.0 и 1.0 -->
+    <aid-group
+        android:category="other"
+        android:description="@string/aid_group_description">
         <aid-filter android:name="D2760000850101" />
         <aid-filter android:name="D2760000850100" />
-        <aid-filter android:name="00000000000000" />
     </aid-group>
 
 </host-apdu-service>
